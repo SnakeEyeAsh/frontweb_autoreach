@@ -26,7 +26,7 @@ export default function Inicio() {
           setCocheInfo(coche)
         }
       })
-      .catch(() => setError('Error al cargar datos'))
+      .catch((e) => setError(e?.message ?? JSON.stringify(e)))
       .finally(() => setLoading(false))
   }, [])
 
