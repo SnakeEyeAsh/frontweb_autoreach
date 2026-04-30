@@ -1,3 +1,7 @@
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 :root {
   --navy: #1a1f3a;
   --navy-light: #252b4a;

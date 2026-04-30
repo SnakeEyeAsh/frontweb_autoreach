@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Raidel/.claude/projects/c--Users-Raidel-Desktop-FrontAutoReach-AutoReachWeb/memory/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Raidel\\.claude\\projects\\c--Users-Raidel-Desktop-FrontAutoReach-AutoReachWeb\\memory"
+    ]
+  }
+}

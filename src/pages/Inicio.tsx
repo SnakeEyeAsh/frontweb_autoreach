@@ -1,20 +1,48 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { obtenerCliente, obtenerMatriculas, obtenerCoche, obtenerGestiones } from '../services/supabaseService'
+import { obtenerCliente, obtenerMatriculas, obtenerCoche, obtenerGestiones, obtenerImagenCliente, subirImagenPerfil } from '../services/supabaseService'
 import type { coche, gestion } from '../model/Tipos'
 
 const TODAY = new Date().toISOString().split('T')[0]
 
 export default function Inicio() {
-  const [cliente, setCliente] = useState<{ nombre: string; apellidos: string } | null>(null)
+  const [cliente, setCliente] = useState<{ id: number; nombre: string; apellidos: string } | null>(null)
   const [matriculas, setMatriculas] = useState<string[]>([])
   const [matriculaActiva, setMatriculaActiva] = useState('')
   const [cocheInfo, setCocheInfo] = useState<coche | null>(null)
   const [gestiones, setGestiones] = useState<gestion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [imgSrc, setImgSrc] = useState<string | null>(null)
+  const [imgError, setImgError] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!cliente?.id) {
+      setError('No se puede subir la imagen: el backend no devuelve el id del cliente en GET /api/me/cliente')
+      return
+    }
+
+    setUploading(true)
+    try {
+      await subirImagenPerfil(cliente.id, file)
+      setImgSrc(URL.createObjectURL(file))
+      setImgError(false)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al subir la imagen')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
 
   useEffect(() => {
+    let blobUrl: string | null = null
+
     Promise.all([obtenerCliente(), obtenerMatriculas(), obtenerGestiones()])
       .then(async ([cli, mats, gs]) => {
         setCliente(cli)
@@ -25,9 +53,18 @@ export default function Inicio() {
           const coche = await obtenerCoche(mats[0])
           setCocheInfo(coche)
         }
+        const blob = await obtenerImagenCliente(cli.id)
+        if (blob) {
+          blobUrl = URL.createObjectURL(blob)
+          setImgSrc(blobUrl)
+        } else {
+          setImgError(true)
+        }
       })
       .catch((e) => setError(e?.message ?? JSON.stringify(e)))
       .finally(() => setLoading(false))
+
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl) }
   }, [])
 
   async function cambiarMatricula(mat: string) {
@@ -114,14 +151,59 @@ export default function Inicio() {
         {/* Perfil */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0', padding: '0', overflow: 'hidden' }}>
           <div style={{ background: 'var(--navy)', padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '72px', height: '72px', borderRadius: '50%',
-              background: '#1565c0', border: '3px solid var(--cyan)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-              </svg>
+            <div
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              title="Cambiar foto de perfil"
+              style={{
+                position: 'relative', width: '72px', height: '72px', borderRadius: '50%',
+                background: '#1565c0', border: '3px solid var(--cyan)',
+                overflow: 'hidden', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: uploading ? 'wait' : 'pointer',
+              }}
+            >
+              {imgSrc && !imgError ? (
+                <img
+                  src={imgSrc}
+                  alt="Foto de perfil"
+                  onError={() => setImgError(true)}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                </svg>
+              )}
+              {/* Overlay hover */}
+              <div style={{
+                position: 'absolute', inset: 0, borderRadius: '50%',
+                background: 'rgba(0,0,0,0.45)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: uploading ? 1 : 0,
+                transition: 'opacity 0.2s',
+              }}
+                onMouseEnter={e => { if (!uploading) (e.currentTarget as HTMLDivElement).style.opacity = '1' }}
+                onMouseLeave={e => { if (!uploading) (e.currentTarget as HTMLDivElement).style.opacity = '0' }}
+              >
+                {uploading ? (
+                  <div style={{
+                    width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.4)',
+                    borderTopColor: '#fff', borderRadius: '50%',
+                    animation: 'spin 0.7s linear infinite',
+                  }} />
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zm6.5-10.7H17l-1.2-1.9A1 1 0 0 0 15 2H9a1 1 0 0 0-.84.46L6.96 4.5H5.5A3.5 3.5 0 0 0 2 8v9a3.5 3.5 0 0 0 3.5 3.5h13A3.5 3.5 0 0 0 22 17V8a3.5 3.5 0 0 0-3.5-3.5z"/>
+                  </svg>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                style={{ display: 'none' }}
+                onChange={handleImageUpload}
+              />
             </div>
             {cliente && (
               <div style={{ textAlign: 'center' }}>
