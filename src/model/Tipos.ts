@@ -17,6 +17,13 @@ export type gestiones = gestion[]
 
 export interface documento {
   id: number
-  nombre: string
-  firmado: boolean
+  tipo_documento: string
+  estado_documento: 'PENDIENTE_FIRMA' | 'FIRMADO' | 'CANCELADO'
+  contenido?: string
+  url_pdf?: string
+  fecha_creacion: string
+  fecha_firma?: string
+  firmado_por?: string
+  cliente_id: number
+  transaccion_id?: number
 }

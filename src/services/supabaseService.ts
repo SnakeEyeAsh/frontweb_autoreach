@@ -125,6 +125,13 @@ export async function subirImagenPerfil(id: number, file: File): Promise<void> {
 
 // ─── Documentos ───────────────────────────────────────────────────────────────
 
-export async function obtenerDocumentos(): Promise<documento[]> {
-  return apiFetch('/api/me/documentos')
+export async function obtenerDocumentosCliente(clienteId: number): Promise<documento[]> {
+  return apiFetch(`/api/documentos?cliente_id=${clienteId}`)
+}
+
+export async function firmarDocumento(id: number, firmadoPor: string): Promise<void> {
+  return apiFetch(`/api/documentos/${id}/firmar`, {
+    method: 'PUT',
+    body: JSON.stringify({ firmado_por: firmadoPor }),
+  })
 }

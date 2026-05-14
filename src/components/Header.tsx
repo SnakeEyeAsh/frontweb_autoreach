@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 function HomeIcon() {
   return (
@@ -17,13 +18,6 @@ function ListIcon() {
   )
 }
 
-function CalendarPlusIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17 12h-3v3h-2v-3h-3v-2h3V7h2v3h3v2zm2-9h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
-    </svg>
-  )
-}
 
 function DocIcon() {
   return (
@@ -42,26 +36,26 @@ function LogoutIcon() {
 }
 
 const links = [
-  { to: '/', label: 'Inicio', Icon: HomeIcon },
+  { to: '/dashboard', label: 'Inicio', Icon: HomeIcon },
   { to: '/gestiones', label: 'Gestiones', Icon: ListIcon },
-  { to: '/nueva-cita', label: 'Nueva Cita', Icon: CalendarPlusIcon },
   { to: '/docs', label: 'Documentos', Icon: DocIcon },
 ]
 
 export default function Header() {
   const { session, signOut } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
   async function handleLogout() {
     await signOut()
-    navigate('/login')
+    navigate('/')
   }
 
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="brand-name">AutoReach</div>
-        <div className="brand-sub">Gestión de tu vehículo</div>
+        <div className="brand-name">Auto<span style={{ color: '#fff', fontWeight: 300 }}>Reach</span></div>
+        <div className="brand-sub">La plataforma del concesionario moderno</div>
       </div>
 
       <nav className="sidebar-nav">
@@ -69,7 +63,7 @@ export default function Header() {
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={to === '/dashboard'}
             className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
           >
             <Icon />
@@ -97,6 +91,17 @@ export default function Header() {
             {session.user.email}
           </div>
         )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle"
+            title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            style={{ flex: 1, borderRadius: '10px', fontSize: '13px', gap: '8px', padding: '0 12px', width: '100%', height: '36px' }}
+          >
+            <span>{isDark ? '☀️' : '🌙'}</span>
+            <span style={{ fontSize: '13px', fontWeight: 500 }}>{isDark ? 'Modo claro' : 'Modo oscuro'}</span>
+          </button>
+        </div>
         <button
           onClick={handleLogout}
           className="sidebar-link"

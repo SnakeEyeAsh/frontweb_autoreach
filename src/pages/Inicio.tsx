@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom'
 import { obtenerCliente, obtenerMatriculas, obtenerCoche, obtenerGestiones, obtenerImagenCliente, subirImagenPerfil } from '../services/supabaseService'
 import type { coche, gestion } from '../model/Tipos'
 
-const TODAY = new Date().toISOString().split('T')[0]
-
 export default function Inicio() {
   const [cliente, setCliente] = useState<{ id: number; nombre: string; apellidos: string } | null>(null)
   const [matriculas, setMatriculas] = useState<string[]>([])
@@ -79,10 +77,6 @@ export default function Inicio() {
     }
   }
 
-  const proximaCita = gestiones
-    .filter(g => g.fecha >= TODAY)
-    .sort((a, b) => a.fecha.localeCompare(b.fecha))[0]
-
   const ultimasGestiones = [...gestiones]
     .sort((a, b) => b.fecha.localeCompare(a.fecha))
     .slice(0, 6)
@@ -90,7 +84,13 @@ export default function Inicio() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Cargando dashboard...</div>
+        <div style={{
+          width: '44px', height: '44px',
+          border: '3px solid var(--border)',
+          borderTopColor: 'var(--cyan)',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
       </div>
     )
   }
@@ -120,28 +120,6 @@ export default function Inicio() {
           <div className="stat-label">Total gestiones</div>
           <div className="stat-value">{gestiones.length}</div>
           <div className="stat-sub">historial completo</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Próxima cita</div>
-          {proximaCita ? (
-            <>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--cyan)', marginTop: '4px' }}>
-                {proximaCita.fecha}
-              </div>
-              <div className="stat-sub">{proximaCita.tipo} · {proximaCita.hora}</div>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '4px' }}>
-                Sin citas
-              </div>
-              <div className="stat-sub">
-                <Link to="/nueva-cita" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: 600 }}>
-                  Programar cita →
-                </Link>
-              </div>
-            </>
-          )}
         </div>
       </div>
 
@@ -224,8 +202,8 @@ export default function Inicio() {
                   width: '100%', textAlign: 'left', cursor: 'pointer',
                   padding: '8px 12px', borderRadius: '7px', border: 'none',
                   marginBottom: '4px', fontSize: '14px', fontWeight: 600,
-                  background: m === matriculaActiva ? 'var(--cyan-light)' : 'var(--bg)',
-                  color: m === matriculaActiva ? '#006064' : 'var(--text)',
+                  background: m === matriculaActiva ? 'var(--cyan-light)' : 'var(--surface)',
+                  color: m === matriculaActiva ? 'var(--cyan)' : 'var(--text)',
                   transition: 'background 0.15s',
                   display: 'flex', alignItems: 'center', gap: '8px',
                 }}
@@ -303,7 +281,7 @@ export default function Inicio() {
         </div>
         {ultimasGestiones.length === 0 ? (
           <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
-            No hay gestiones. <Link to="/nueva-cita" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: 600 }}>Crear primera cita →</Link>
+            No hay gestiones registradas.
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -324,7 +302,7 @@ export default function Inicio() {
                   key={g.id}
                   style={{
                     borderTop: '1px solid var(--border)',
-                    background: i % 2 === 0 ? '#fff' : '#fafbfc',
+                    background: i % 2 === 0 ? 'var(--card-bg)' : 'var(--bg)',
                   }}
                 >
                   <td style={{ padding: '11px 20px', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>

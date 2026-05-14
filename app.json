@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "7500afb2-235f-433e-b253-51df049ff79b"
+      }
+    },
+    "android": {
+      "package": "com.raidel.autoreachapp"
+    }
+  }
+}
