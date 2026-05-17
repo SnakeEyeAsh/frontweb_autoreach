@@ -26,7 +26,7 @@ function CarIcon() {
 }
 
 export default function Login() {
-  const { session, loading, signIn } = useAuth()
+  const { token, loading, signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -41,7 +41,7 @@ export default function Login() {
     )
   }
 
-  if (session) return <Navigate to="/dashboard" replace />
+  if (token) return <Navigate to="/dashboard" replace />
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()

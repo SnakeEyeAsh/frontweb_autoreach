@@ -92,7 +92,7 @@ const features: { Icon: IconComponent; title: string; desc: string; href?: strin
   { Icon: DocIcon, title: 'Firma de documentos', desc: 'Firma contratos, garantías y facturas digitalmente desde cualquier dispositivo. Sin papel, sin esperas.' },
   { Icon: DashboardIcon, title: 'Panel de control', desc: 'Un vistazo y ya sabes todo: vehículos activos, gestiones recientes y documentos pendientes.' },
   { Icon: LockIcon, title: 'Seguro y privado', desc: 'Tus datos protegidos con autenticación segura. Solo tú accedes a tu información.' },
-  { Icon: PhoneIcon as IconComponent, title: 'App móvil', desc: 'Lleva tu concesionario en el bolsillo. Gestiona tus vehículos y recibe notificaciones desde cualquier sitio.', href: 'http://35.202.97.203/downloads/AutoReach.apk' },
+  { Icon: PhoneIcon as IconComponent, title: 'App móvil', desc: 'Lleva tu concesionario en el bolsillo. Gestiona tus vehículos y recibe notificaciones desde cualquier sitio.', href: 'https://raid-el-martinez.com/downloads/AutoReach.apk' },
 ]
 
 const steps: { num: string; Icon: IconComponent; title: string; desc: string }[] = [
@@ -272,7 +272,7 @@ export default function Landing() {
             Acceder como cliente <ArrowIcon />
           </Link>
           <a
-            href="http://35.202.97.203/downloads/AutoReach.apk"
+            href="https://raid-el-martinez.com/downloads/AutoReach.apk"
             download="AutoReach.apk"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '10px',

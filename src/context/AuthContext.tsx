@@ -1,50 +1,50 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+
+const TOKEN_KEY = 'ar_token'
+const API_URL = import.meta.env.VITE_API_URL as string
 
 interface AuthContextType {
-  session: Session | null
+  token: string | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<string | null>
-  signOut: () => Promise<void>
+  signOut: () => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Recupera la sesión guardada en localStorage al arrancar
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setSession(session)
-      } else if (event === 'SIGNED_OUT') {
-        setSession(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
+    setToken(localStorage.getItem(TOKEN_KEY))
+    setLoading(false)
   }, [])
 
   async function signIn(email: string, password: string): Promise<string | null> {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return error?.message ?? null
+    try {
+      const res = await fetch(`${API_URL}/api/clientes/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const body = await res.json()
+      if (!res.ok) return body.error ?? 'Credenciales incorrectas'
+      localStorage.setItem(TOKEN_KEY, body.token)
+      setToken(body.token)
+      return null
+    } catch {
+      return 'Error de conexión'
+    }
   }
 
-  async function signOut() {
-    await supabase.auth.signOut()
-    setSession(null)
+  function signOut() {
+    localStorage.removeItem(TOKEN_KEY)
+    setToken(null)
   }
 
   return (
-    <AuthContext.Provider value={{ session, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ token, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )

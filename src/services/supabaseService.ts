@@ -1,40 +1,29 @@
-import { supabase } from '../lib/supabase'
 import type { coche, gestion, gestiones, documento } from '../model/Tipos'
 
+const TOKEN_KEY = 'ar_token'
 const API_URL = import.meta.env.VITE_API_URL as string
 
-async function getToken(): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session) return session.access_token
-
-  // Si no hay sesión en caché, intenta refrescar
-  const { data: { session: refreshed } } = await supabase.auth.refreshSession()
-  if (!refreshed) throw new Error('No autenticado')
-  return refreshed.access_token
+function getToken(): string {
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (!token) throw new Error('No autenticado')
+  return token
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const doRequest = async (token: string) =>
-    fetch(`${API_URL}${path}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        ...(options.headers ?? {}),
-      },
-    })
+  const token = getToken()
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(options.headers ?? {}),
+    },
+  })
 
-  let token = await getToken()
-  let res = await doRequest(token)
-
-  // Token caducado: refresca y reintenta una vez
   if (res.status === 401) {
-    const { data: { session } } = await supabase.auth.refreshSession()
-    if (!session) throw new Error('Sesión expirada, inicia sesión de nuevo')
-    token = session.access_token
-    res = await doRequest(token)
+    localStorage.removeItem(TOKEN_KEY)
+    throw new Error('Sesión expirada, inicia sesión de nuevo')
   }
-
   if (res.status === 204) return undefined as T
   const body = await res.json()
   if (!res.ok) throw new Error(body.error ?? res.statusText)
@@ -86,12 +75,11 @@ export async function borrarGestion(id: number) {
 // ─── Imagen de perfil ─────────────────────────────────────────────────────────
 
 export async function obtenerImagenPerfil(): Promise<Blob | null> {
-  const token = await getToken()
+  const token = getToken()
   const res = await fetch(`${API_URL}/api/me/imagen`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) return null
-
   const buffer = await res.arrayBuffer()
   const b = new Uint8Array(buffer)
   let mime = 'image/jpeg'
@@ -114,10 +102,12 @@ export async function obtenerImagenCliente(id: number): Promise<Blob | null> {
 }
 
 export async function subirImagenPerfil(id: number, file: File): Promise<void> {
+  const token = getToken()
   const form = new FormData()
   form.append('imagen', file)
   const res = await fetch(`${API_URL}/api/clientes/${id}/imagen`, {
     method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
     body: form,
   })
   if (!res.ok) throw new Error(`PUT falló: ${res.status}`)

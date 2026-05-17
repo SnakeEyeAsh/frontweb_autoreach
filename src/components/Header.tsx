@@ -42,12 +42,12 @@ const links = [
 ]
 
 export default function Header() {
-  const { session, signOut } = useAuth()
+  const { signOut } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
-  async function handleLogout() {
-    await signOut()
+  function handleLogout() {
+    signOut()
     navigate('/')
   }
 
@@ -78,19 +78,6 @@ export default function Header() {
         padding: '16px 12px',
         borderTop: '1px solid rgba(255,255,255,0.07)',
       }}>
-        {session?.user?.email && (
-          <div style={{
-            padding: '8px 12px',
-            marginBottom: '6px',
-            fontSize: '12px',
-            color: 'rgba(255,255,255,0.35)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {session.user.email}
-          </div>
-        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
           <button
             onClick={toggleTheme}
